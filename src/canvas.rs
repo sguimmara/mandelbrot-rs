@@ -1,6 +1,7 @@
 use std::path::Path;
 
 use image::{Rgb, ImageBuffer};
+use rayon::prelude::{IntoParallelIterator, ParallelIterator, IndexedParallelIterator};
 
 use crate::complex::Complex;
 
@@ -51,7 +52,7 @@ impl Canvas {
     }
 
     pub fn compute_mandelbrot_set(&mut self, path: &Path) {
-        self.do_compute_loops();
+        self.do_compute_par_iter();
 
         self.write_to(path)
     }
@@ -67,6 +68,25 @@ impl Canvas {
         if is_in_mandelbrot_set(c) {
             self.pixels[y * self.width + x] = true;
         }
+    }
+
+    fn do_compute_par_iter(&mut self) {
+        let size = self.width * self.height;
+
+        (0..size).into_par_iter().map(|pos| {
+            let x = pos % self.width;
+            let y = pos / self.height;
+
+            let x_step = 1.0 / self.width as f64;
+            let y_step = 1.0 / self.height as f64;
+            let dom = DOMAIN.1 - DOMAIN.0;
+
+            let r = DOMAIN.0 + (x as f64 * x_step) * dom;
+            let i = DOMAIN.0 + (y as f64 * y_step) * dom;
+            let c = Complex::new(r, i);
+
+            is_in_mandelbrot_set(c)
+        }).collect_into_vec(&mut self.pixels);
     }
 
     fn do_compute_iter(&mut self) {

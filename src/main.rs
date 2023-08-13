@@ -6,9 +6,7 @@ pub mod complex;
 pub mod canvas;
 
 fn main() {
-    println!("Hello, world!");
-
-    let mut canvas = Canvas::new(2048, 2048);
+    let mut canvas = Canvas::new(4096, 4096);
 
     canvas.compute_mandelbrot_set(Path::new("mandelbrot.jpg"));
 }
